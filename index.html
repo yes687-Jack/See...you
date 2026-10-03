@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>看见...你</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@300;400;600&family=Noto+Sans+SC:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="./src/styles/main.css">
+<script>
+// file:// 直接打开根目录（开发入口）时，模块脚本与运行时图片路径不可用，
+// 自动跳转到可独立运行的构建产物 dist/index.html；dist 不存在则给出提示。
+// dist 页面自身路径含 /dist/，不会重复跳转。
+if(location.protocol==='file:' && location.pathname.indexOf('/dist/')===-1){
+  var probe=new Image();
+  probe.onload=function(){location.replace('./dist/index.html')};
+  probe.onerror=function(){
+    addEventListener('DOMContentLoaded',function(){
+      var d=document.createElement('div');
+      d.style.cssText='position:fixed;left:0;right:0;bottom:40px;text-align:center;color:#ea6668;font-size:13px;z-index:99;text-shadow:0 1px 4px rgba(0,0,0,.8)';
+      d.textContent='未找到构建产物 dist/index.html，请先运行 npm run build（开发调试请用 npm run dev）';
+      document.body.appendChild(d);
+    });
+  };
+  probe.src='./dist/assets/img/welcome.jpg?x='+Date.now();
+}
+</script>
+</head>
+<body>
+<div id="app">
+  <div class="screen active" id="screen-welcome" style="padding:0;justify-content:flex-start">
+    <img data-src="./assets/img/welcome.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(50px) brightness(.5);transform:scale(1.3)">
+    <img data-src="./assets/img/welcome.jpg" alt="" style="position:relative;z-index:1;max-width:92%;max-height:52vh;width:auto;height:auto;margin-top:5vh;flex-shrink:0;box-shadow:0 0 80px rgba(0,0,0,.4);border-radius:8px">
+    <div style="position:absolute;inset:0;background:linear-gradient(rgba(10,11,15,.1) 0%,rgba(10,11,15,.2) 50%,rgba(10,11,15,.55) 80%,rgba(10,11,15,.82) 100%);pointer-events:none"></div>
+    <div id="sparks" style="position:absolute;inset:0;pointer-events:none"></div>
+    <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;padding:24px 24px 8vh;margin-top:auto">
+      <h1 class="serif">看见...你</h1>
+      <div class="subtitle">同一个声音，<br>不同的人，看见不同的世界。</div>
+      <div class="mode-btns">
+        <button class="btn btn-primary" onclick="singleStart()">听声想象</button>
+        <button class="btn" onclick="buildMode()">搭一个世界</button>
+        <button class="btn" onclick="enter3d()">3D 世界</button>
+        <button class="btn" onclick="partySetup()">聚会模式</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-listen">
+    <button class="btn" style="position:absolute;top:20px;left:20px;z-index:10;margin:0;padding:8px 20px;font-size:12px;display:flex;align-items:center;gap:7px;letter-spacing:1px;line-height:1" onclick="show('screen-welcome')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>返回主页</button>
+    <div class="sound-icon" id="sound-icon" onclick="toggleSound()">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/></svg>
+    </div>
+    <h2 class="serif">闭上眼睛，听听这是什么</h2>
+    <div class="hint">点击播放，听完后告诉我你看到了什么</div>
+    <div class="wave" id="wave"></div>
+  </div>
+
+  <div class="screen" id="screen-type">
+    <h2 class="serif">你听见了什么？</h2>
+    <div class="hint">用一句话描述你脑海里的画面</div>
+    <input id="user-input" type="text" placeholder="比如：一个下雨的海边夜晚..." autocomplete="off" onkeydown="if(event.key==='Enter')generateSelf()">
+    <button class="btn btn-primary" onclick="generateSelf()">看见我的世界</button>
+  </div>
+
+  <div class="screen" id="screen-build">
+    <button class="btn" style="position:absolute;top:20px;left:20px;z-index:10;margin:0;padding:8px 20px;font-size:12px;display:flex;align-items:center;gap:7px;letter-spacing:1px;line-height:1" onclick="show('screen-welcome')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>返回主页</button>
+    <h2 class="serif">搭一个世界</h2>
+    <div class="hint">在画板上随便画</div>
+    
+    <div class="layer-label" style="margin-top:10px">画幅</div>
+    <div id="ratio-row" class="choice-row" style="max-width:100%"></div>
+    <div class="canvas-wrap" style="margin-top:12px" id="canvas2d-wrap"><canvas id="draw-canvas" width="800" height="450"></canvas></div>
+    
+    <div class="canvas-tools" id="draw-tools"></div>
+    <div style="width:100%;max-width:600px;margin-top:18px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center">
+      <div style="flex:1;min-width:200px">
+        <div class="layer-label" style="margin-top:0">视角</div>
+        <div id="angle-row" class="choice-row" style="justify-content:flex-start;margin-top:8px"></div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div class="layer-label" style="margin-top:0">主色调</div>
+        <div id="color-row" class="choice-row" style="justify-content:flex-start;margin-top:8px"></div>
+        <input type="text" id="custom-color" placeholder="自定义颜色，比如：暗青色" style="width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.15);color:#e8e6e1;font-size:12px;padding:4px 2px;outline:none;font-family:inherit;margin-top:6px">
+      </div>
+    </div>
+    <input id="build-free" type="text" placeholder="你想画什么？比如：一个雨夜的海边码头..." style="width:100%;max-width:600px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.2);color:#e8e6e1;font-size:14px;padding:6px 2px;outline:none;font-family:inherit;margin-top:16px;text-align:center">
+    <div class="layer-label">风格</div>
+    <div id="style-row" class="choice-row" style="max-width:100%"></div>
+    <button class="btn btn-primary" onclick="generateBuild()">生成</button>
+  </div>
+
+  <div class="screen" id="screen-3d" style="padding:0;background:#1a1a2e">
+    <div id="three-container" style="position:absolute;inset:0"></div>
+    <!-- 左侧工具栏 -->
+    <div style="position:absolute;bottom:102px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:row;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;background:rgba(0,0,0,.4);backdrop-filter:blur(10px);padding:10px 16px;border-radius:16px;max-width:92%;box-sizing:border-box">
+      <div style="font-size:10px;color:rgba(255,255,255,.5);letter-spacing:1px">工具</div>
+      <div id="3d-tools" style="display:flex;flex-direction:row;gap:6px">
+        <button id="tool-paint" title="油漆桶（流体倾倒，可调流量）" style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.12);border:2px solid #fff;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center">🪣</button>
+        <button id="tool-spray" title="喷雾罐（可调喷雾范围）" style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.12);border:2px solid transparent;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center">💨</button>
+        <button id="tool-brush" title="笔刷" style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.12);border:2px solid transparent;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center">🖌️</button>
+        <button id="tool-fill" title="填色（秘密花园玩法：点击一个部位，整个部位填上所选颜色）" style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.12);border:2px solid transparent;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center">🖍️</button>
+      </div>
+      <div style="width:1px;height:26px;background:rgba(255,255,255,.2)"></div>
+      <div id="3d-size-label" style="font-size:10px;color:rgba(255,255,255,.5);letter-spacing:1px">粗细</div>
+      <input type="range" id="3d-brush" min="4" max="60" value="60" style="width:110px">
+    </div>
+    <!-- 底部动作按钮 -->
+    <div id="3d-actions" style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:80%"></div>
+    <!-- 左侧模型选择面板：层级1 分类（左） → 层级2 模型（右） -->
+    <div id="3d-model-panel" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);z-index:10;display:flex;flex-direction:column;gap:8px;align-items:stretch;background:rgba(0,0,0,.45);backdrop-filter:blur(10px);padding:14px 12px;border-radius:16px;min-width:132px">
+      <div style="font-size:11px;color:rgba(255,255,255,.55);letter-spacing:2px;text-align:center;margin-bottom:2px">🧸 模型</div>
+      <button class="3d-cat" data-cat="animal" onclick="toggleModelCat('animal')" style="padding:9px 10px;border-radius:10px;font-size:13px;cursor:pointer;background:rgba(255,255,255,.08);color:#e8e6e1;border:2px solid transparent;text-align:center;font-family:inherit">🐾 动物</button>
+      <button class="3d-cat" data-cat="role" onclick="toggleModelCat('role')" style="padding:9px 10px;border-radius:10px;font-size:13px;cursor:pointer;background:rgba(255,255,255,.08);color:#e8e6e1;border:2px solid transparent;text-align:center;font-family:inherit">🧑‍🚀 角色</button>
+    </div>
+    <!-- 二级模型列表：显示在一级面板右侧 -->
+    <div id="3d-model-sub" style="position:absolute;left:166px;top:50%;transform:translateY(-50%);z-index:10;display:none;flex-direction:column;gap:6px;background:rgba(0,0,0,.45);backdrop-filter:blur(10px);padding:12px 10px;border-radius:16px;min-width:112px"></div>
+    <!-- 右侧固定颜色面板 -->
+    <div id="3d-color-panel" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);z-index:10;display:none;flex-direction:column;gap:10px;align-items:center;background:rgba(0,0,0,.45);backdrop-filter:blur(10px);padding:14px 12px;border-radius:16px;min-width:148px">
+      <div style="display:flex;justify-content:center;width:100%;align-items:center">
+        <span style="font-size:12px;color:rgba(255,255,255,.75);letter-spacing:1px">🎨 颜色</span>
+      </div>
+      <div id="3d-color-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px"></div>
+      <div style="font-size:10px;color:rgba(255,255,255,.5);letter-spacing:1px">自定义</div>
+      <input type="color" id="3d-color-custom" value="#ea6668" style="width:120px;height:30px;border:none;background:transparent;cursor:pointer;padding:0">
+      <div style="width:100%;height:1px;background:rgba(255,255,255,.15);margin:2px 0"></div>
+      <button id="3d-mix-clear" style="padding:5px 16px;border-radius:99px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#e8e6e1;font-size:11px;cursor:pointer">清空颜料杯</button>
+      <!-- 透明度：放在颜色面板最外层 -->
+      <div style="width:100%;height:1px;background:rgba(255,255,255,.15);margin:2px 0"></div>
+      <div style="font-size:10px;color:rgba(255,255,255,.5);letter-spacing:1px;width:100%;text-align:center">透明度</div>
+      <input type="range" id="3d-opacity" min="10" max="100" value="100" oninput="window.__paintOpacity=this.value/100" style="width:122px;accent-color:#ea6668">
+    </div>
+    <!-- 浇注杯：混合杯即浇注按钮，位于模型上方；杯内数字显示浇筑量（空→100%→递减到0） -->
+    <div id="pour-cup-btn" onclick="updateCupHint()" title="浇注：加颜料后直接点击模型浇注" style="position:absolute;top:164px;left:75%;transform:translateX(-50%);z-index:12;cursor:pointer;text-align:center;user-select:none">
+      <div style="position:relative;width:88px;height:88px;margin:0 auto">
+        <canvas id="3d-mix-cup" width="160" height="160" style="width:88px;height:88px;border-radius:50%;border:2.5px solid rgba(255,255,255,.5);background:#20222e;box-shadow:0 6px 24px rgba(0,0,0,.55)"></canvas>
+        <div id="pour-cup-num" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.9);pointer-events:none">空</div>
+      </div>
+      <div id="pour-cup-hint" style="font-size:10px;color:rgba(255,255,255,.75);letter-spacing:2px;margin-top:6px">先添加颜色</div>
+    </div>
+    <!-- 顶部标题 -->
+    <div style="position:absolute;top:20px;left:0;right:0;text-align:center;z-index:10;pointer-events:none">
+      <div class="serif" style="font-size:20px;color:#fff;letter-spacing:3px">给模型上色</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:6px">右键拖动旋转 · 左键按住涂鸦</div>
+      <div id="3d-dbg" style="font-size:12px;color:rgba(255,255,255,.7);margin-top:8px;font-family:monospace;background:rgba(0,0,0,.35);padding:3px 10px;border-radius:8px;display:inline-block"></div>
+    </div>
+    <button class="btn" style="position:absolute;top:20px;left:20px;z-index:10;margin:0;padding:8px 20px;font-size:12px;display:flex;align-items:center;gap:7px;letter-spacing:1px;line-height:1" onclick="show('screen-welcome');clear3dTools()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>返回主页</button>
+  </div>
+
+  <div class="screen" id="screen-party-rules">
+    <button class="btn" style="position:absolute;top:20px;left:20px;z-index:10;margin:0;padding:8px 20px;font-size:12px;display:flex;align-items:center;gap:7px;letter-spacing:1px;line-height:1" onclick="show('screen-welcome')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>返回主页</button>
+    <h2 class="serif">聚会模式</h2>
+    <div style="max-width:300px;margin-top:16px;text-align:left;font-size:13px;line-height:2;color:#8a8a8e">
+      <div style="margin-bottom:8px;color:#e8e6e1;font-size:14px">玩法：</div>
+      <div>1. 一个人创建房间，生成 4 位数字密码</div>
+      <div>2. 其他人输入密码加入（最多 8 人）</div>
+      <div>3. 所有人一起听同一段声音</div>
+      <div>4. 各自写下脑海里的画面</div>
+      <div>5. 最后一起看看每个人听到了什么</div>
+    </div>
+    <div class="mode-btns">
+      <button class="btn btn-primary" onclick="createRoom()">创建房间</button>
+      <button class="btn" onclick="showJoin()">加入房间</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-party-create">
+    <h2 class="serif">房间已创建</h2>
+    <div class="hint" style="margin-top:20px">把这串数字告诉在场的人</div>
+    <div id="room-code" style="font-size:48px;letter-spacing:12px;margin-top:16px;font-family:'Noto Serif SC',serif;color:#e8e6e1">----</div>
+    <div style="margin-top:24px;font-size:13px;color:#6b6b70">已加入 <span id="joined-count">1</span> / 8 人</div>
+    <div id="joined-list" style="margin-top:12px;font-size:13px;color:#8a8a8e"></div>
+    <button class="btn btn-primary" onclick="partyStart()">人齐了，开始</button>
+  </div>
+
+  <div class="screen" id="screen-party-join">
+    <h2 class="serif">加入房间</h2>
+    <div class="hint" style="margin-top:16px">输入创建者告诉你的 4 位数字</div>
+    <input id="join-code" type="text" maxlength="4" inputmode="numeric" placeholder="____" style="width:100%;max-width:200px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.2);color:#e8e6e1;font-size:32px;font-family:'Noto Serif SC',serif;padding:10px 4px;outline:none;text-align:center;letter-spacing:12px;margin-top:12px">
+    <div id="join-error" style="color:#ea6668;font-size:12px;margin-top:8px;display:none">密码不对，再试一次</div>
+    <button class="btn btn-primary" onclick="joinRoom()">加入</button>
+  </div>
+
+  <div class="screen" id="screen-party-input">
+    <h2 class="serif" id="party-who">轮到第 1 个人</h2>
+    <div class="layer-label">你的名字</div>
+    <input id="name-input" type="text" placeholder="叫什么？" autocomplete="off">
+    <div class="layer-label">你听到了什么世界？</div>
+    <input id="party-desc" type="text" placeholder="一句话描述..." autocomplete="off" onkeydown="if(event.key==='Enter')nextPlayer()">
+    <button class="btn btn-primary" onclick="nextPlayer()">下一位</button>
+  </div>
+
+  <div class="screen" id="screen-loading">
+    <div class="loading-text serif" id="loading-text">正在构建你的世界</div>
+    <div class="loading-bar"></div>
+  </div>
+
+  <div class="screen" id="screen-self">
+    <img id="self-img" src="" alt="">
+    <div class="overlay">
+      <div class="label">你的世界</div>
+      <div class="caption serif" id="self-caption"></div>
+      <div class="bottom-btn"><button class="btn" onclick="goOthers()">看看别人的世界</button></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-others">
+    <div class="header"><h2 class="serif">同一个声音，不同的世界</h2><p>他们听到的，和你一样吗？</p></div>
+    <div id="cards"></div>
+    <div class="bottom-btn"><button class="btn btn-primary" onclick="goReveal()">原来它是这样的</button></div>
+  </div>
+
+  <div class="screen" id="screen-wall">
+    <div class="header"><h2 class="serif">同一个声音，N 个世界</h2><p>看看每个人听到了什么</p></div>
+    <div id="wall-grid"></div>
+    <div class="bottom-btn"><button class="btn btn-primary" onclick="goReveal()">原来它是这样的</button></div>
+  </div>
+
+  <div class="screen" id="screen-reveal">
+    <img id="reveal-img" src="" alt="">
+    <div class="overlay">
+      <div class="label">这个声音其实来自</div>
+      <div class="caption serif" id="reveal-caption"></div>
+      <div style="margin-top:20px"><button class="btn" onclick="nextScene()">下一个声音</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 兼容 file:// 直接打开源码：图片在 public/assets/，HTTP(dev/build)下在 assets/
+(function(){
+  var prefix = location.protocol === 'file:' ? './public' : '.';
+  document.querySelectorAll('img[data-src]').forEach(function(img){
+    img.src = prefix + img.dataset.src.slice(1);
+  });
+})();
+</script>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

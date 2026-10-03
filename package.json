@@ -1,0 +1,17 @@
+{
+  "name": "see-you-h5",
+  "version": "0.1.0",
+  "private": true,
+  "description": "《看见...你》—— 听见 → 想象 → 表达 → 看见自己 → 看见别人 → 看见现实",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "0.128.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}
