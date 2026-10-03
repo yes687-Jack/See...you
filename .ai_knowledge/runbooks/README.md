@@ -6,7 +6,7 @@
 
 | 文档 | 说明 |
 |---|---|
-| _（待补充）_ | |
+| [release-branch.md](./release-branch.md) | 版本发布流程：从 main 切 `release/x.y.z`（首个 0.0.0）+ 打 `v` 标签；release 修复按「main 是否需要」评估、经同意后 cherry-pick 回合 |
 
 ## 收录标准
 

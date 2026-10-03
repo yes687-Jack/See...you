@@ -65,5 +65,5 @@ feat(3d-viewer): 替换默认小熊为卡通3D造型
 ## 关联
 
 - 上游 / 依赖：无
-- 下游 / 影响面：约束仓库内全部提交行为；未来的发布手册（runbooks）应引用本规范
-- 相关文档：暂无
+- 下游 / 影响面：约束仓库内全部提交行为；[版本发布与 release 分支管理流程](../runbooks/release-branch.md) 中的提交与推送环节引用本规范
+- 相关文档：[release-branch.md](../runbooks/release-branch.md)
